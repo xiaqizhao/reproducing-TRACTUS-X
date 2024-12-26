@@ -156,4 +156,72 @@ else
     echo "Terraform is already installed, skipping installation"
 fi
 
+# Step 8: Install kubectl (if not installed)
+# Reference: https://kubernetes.io/docs/tasks/tools/install-kubectl/
+
+if ! command -v kubectl &>/dev/null; then
+    echo "kubectl is not installed, starting installation..."
+    
+    # Download the latest stable version of kubectl
+    curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+    
+    # Make kubectl executable
+    chmod +x kubectl
+    
+    # Move kubectl to /usr/local/bin
+    sudo mv kubectl /usr/local/bin/
+    
+    # Verify the installation
+    kubectl version --client
+else
+    echo "kubectl is already installed, current version is: $(kubectl version --client --short)"
+fi
+
+########################
+# Step 9: Check if Java is installed
+if ! command -v java &> /dev/null
+then
+    echo "Java is not installed, installing Java..."
+
+    # Define download link
+    JAVA_URL="https://download.oracle.com/java/17/archive/jdk-17.0.12_linux-x64_bin.deb"
+    JAVA_DEB="jdk-17.0.12_linux-x64_bin.deb"
+
+    # Update package index
+    sudo apt update
+
+    # Install necessary dependencies
+    sudo apt install -y wget dpkg
+
+    # Download the .deb file for JDK 17
+    echo "Downloading JDK 17..."
+    wget $JAVA_URL -O $JAVA_DEB
+
+    # Install the .deb file
+    echo "Installing JDK 17..."
+    sudo dpkg -i $JAVA_DEB
+
+    # Resolve any dependency issues
+    echo "Resolving dependencies..."
+    sudo apt-get install -f
+
+    # Set JAVA_HOME environment variable
+    JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))
+    echo "Setting JAVA_HOME to: $JAVA_HOME"
+
+    # Add JAVA_HOME to the .zshrc configuration file
+    echo "export JAVA_HOME=$JAVA_HOME" >> ~/.zshrc
+    echo "export PATH=\$JAVA_HOME/bin:\$PATH" >> ~/.zshrc
+
+    # Apply changes immediately
+    source ~/.zshrc
+
+    # Verify Java installation
+    java -version
+
+    echo "Java installation completed and JAVA_HOME has been set."
+else
+    echo "Java is already installed, skipping installation process."
+fi
+
 echo "Installation complete! Please log out of the current zsh session."
